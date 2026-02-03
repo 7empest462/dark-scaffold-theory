@@ -29,4 +29,6 @@ Unlike standard models, DST reduces the energy required for galaxy formation by 
 - **Formula:** Total Energy = Injection Energy - Scaffold Gravity
 $$E_{total} = E_{injection} - G_{scaffold}$$
 
----
+📚 Selected References
+1. Penrose, R. (2025). Apparent Evidence for Hawking Points in the CMB. 2.  Montero, M., et al. (2024). The Dark Dimension and the Hubble Tension. 3.  Simens, R. (2026). Dark Scaffold Cosmology: A Computational Proof. (This Repository)
+
