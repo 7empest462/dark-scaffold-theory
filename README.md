@@ -2,6 +2,8 @@
 
 **An Open-Source Cosmological Model Solving the JWST & Hubble Tension**
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18464392.svg)](https://doi.org/10.5281/zenodo.18464392)
+
 ![Seepage Animation](seepage.gif)
 
 ## 🔭 The Theory in Brief

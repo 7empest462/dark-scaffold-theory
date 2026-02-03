@@ -7,6 +7,9 @@ title: "Dark Scaffold Theory: A Computational Proof"
 version: 1.0.0
 date-released: 2026-02-02
 url: "https://github.com/robsimens/dark-scaffold-theory"
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.18464392
 abstract: "A cosmological model proposing pre-existing dark matter structure to resolve the Hubble Tension, Core-Cusp problem, and early galaxy formation."
 keywords:
   - cosmology
