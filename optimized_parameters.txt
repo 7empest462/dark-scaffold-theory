@@ -1,0 +1,11 @@
+OPTIMIZED DARK SCAFFOLD PARAMETERS
+========================================
+
+spectral_index: -0.5441986624914583
+smoothing_scale: 3.4828123878277286
+filament_threshold: 2.2095514475846274
+dm_attraction_strength: 3.7800251932129227
+filament_preference: 2.5580404025708754
+
+Final Score: 25.0/100
+Improvement: +0.0 points

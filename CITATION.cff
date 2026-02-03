@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software or theory, please cite it as below."
+authors:
+  - family-names: "Simens"
+    given-names: "Rob"
+title: "Dark Scaffold Theory: A Computational Proof"
+version: 1.0.0
+date-released: 2026-02-02
+url: "https://github.com/robsimens/dark-scaffold-theory"
+abstract: "A cosmological model proposing pre-existing dark matter structure to resolve the Hubble Tension, Core-Cusp problem, and early galaxy formation."
+keywords:
+  - cosmology
+  - dark matter
+  - simulation
+  - hubble tension
+  - jwst
+license: MIT
