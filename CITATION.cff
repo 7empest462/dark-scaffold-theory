@@ -3,6 +3,7 @@ message: "If you use this software or theory, please cite it as below."
 authors:
   - family-names: "Simens"
     given-names: "Rob"
+    orcid: "https://orcid.org/0009-0003-2481-7621"
 title: "Dark Scaffold Theory: A Computational Proof"
 version: 1.0.0
 date-released: 2026-02-02
