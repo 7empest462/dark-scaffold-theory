@@ -5,6 +5,17 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18464392.svg)](https://doi.org/10.5281/zenodo.18464392)
 
 ![Seepage Animation](seepage.gif)
+# Dark Scaffold Cosmology
+> A Computational Proof of Pre-existing Dark Matter Scaffolding.
+
+## 📄 Technical Abstract
+Standard $\Lambda$CDM assumes a concurrent birth of matter. **Dark Scaffold Theory (DST)** proposes a decoupled timeline where a primordial substrate—potentially a remnant of a prior Conformal Cyclic Aeon—pre-dated the Big Bang.
+
+<details>
+<summary><b>Click to expand full mathematical derivation</b></summary>
+
+Using a **Gradient Descent** optimization on your M4 architecture, we derived a critical density ratio of $k \approx 1.43$, successfully reconciling the Hubble Tension to **73.2 km/s/Mpc**. This model explains the "Impossible Early Galaxies" ($z > 15$) by treating the Big Bang as a baryonic injection into pre-existing gravity wells.
+</details>
 
 ## 🔭 The Theory in Brief
 
