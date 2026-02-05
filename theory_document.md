@@ -86,13 +86,20 @@ The theory creates a universe with significantly less "creation energy" required
 
 ---
 
-## 4. Origin of the Scaffold
+## 4. Origin of the Scaffold: "The Cycles of Time"
 
-The theory pushes "creation" back one step. Possibilities:
+The most compelling explanation for the pre-existence of the scaffold is **Cyclic Cosmology**.
 
-1. **Cyclic Universe Remnant:** Skeleton of a previous aeon (Penrose/CCC).
-2. **Vacuum Property:** Dark matter is a geometric property of spacetime itself.
-3. **Brane Interaction:** A "shadow" of mass in a higher dimension.
+### The "Accumulator" Hypothesis
+
+If the universe undergoes infinite cycles of Big Bang $\to$ Expansion $\to$ Heat Death, mass does not simply vanish.
+
+1.  **Late-Stage Aeon:** The previous universe expands. Black holes evaporate extremely slowly, or leave gravitational "scars" (conformal distortions) in spacetime.
+2.  **The Memory:** These gravitational remnants form a "Ghost Web" — a skeletal structure of curvature that survives the conformal rescaling at the end of the aeon.
+3.  **The New Bang:** The next Big Bang occurs. The new baryonic matter is injected into a universe that is "empty" of matter but "full" of history (the Scaffold).
+4.  **Growth:** Matter falls into the Ghost Web. We are literally building our galaxies on the ruins of the previous universe's superclusters.
+
+This explains why the Dark Scaffold is "Dark" (it's not matter, it's gravity) and why it's "Pre-Existing" (it's from the Before).
 
 ---
 
