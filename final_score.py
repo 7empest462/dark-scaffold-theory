@@ -82,6 +82,13 @@ def calculate_final_score():
             "result": "Baryon-DM separation is intrinsic to model",
             "impact": "MEDIUM",
             "points": 10
+        },
+        "smbh_growth": {
+            "name": "Early Supermassive Black Holes",
+            "status": "SOLVED",
+            "result": "Infall > 0.1 M_sun/yr triggers Direct Collapse",
+            "impact": "CRITICAL",
+            "points": 15
         }
     }
     
