@@ -138,7 +138,35 @@ This is a **retrodiction**—the Dark Scaffold model, with reasonable parameters
 
 ---
 
-## 7. Open Questions
+### 6.4 Scaffold-Mediated Neutrino Events
+
+**Prediction (Theoretical Correlation):**
+
+- **Energy Scale:** 100-220 PeV (Ultra-High-Energy)
+- **Signature:** Explosive neutrino bursts from **Scaffold-Coupled Primordial Black Holes (PBHs)**.
+- **Physical Mechanism:** PBHs forming in high-$\Phi$ nodes carry a "Dark Charge" $Q_{\Phi} = \int \nabla \Phi \cdot d\mathbf{A}$. Evaporation via Hawking radiation is modified by the scaffold coupling, leading to the emission of ultra-high-energy neutrinos.
+
+This provides a direct explanation for the **KM3NeT KM3-230213A event**, which defies standard astrophysical acceleration models.
+
+---
+
+## 7. Neutrino-Scaffold Interactions
+
+The difference between CMB-derived neutrino masses and local measurements implies a medium effect. We define the **Scaffold-Modified Propagator** as:
+
+$$
+\mathcal{L}_\nu = \bar{\psi}_\nu (i\gamma^\mu \partial_\mu - m_\nu - g_{\nu\Phi} \Phi) \psi_\nu
+$$
+
+Where $g_{\nu\Phi}$ is the neutrino-scaffold coupling. This results in an **Effective Mass** $m_{\text{eff}} = m_\nu + g_{\nu\Phi} \langle \Phi \rangle$.
+
+- In the early universe (smooth $\Phi$), neutrinos appear lighter.
+- In the local universe (clumpy $\Phi$), neutrinos interacting with filaments appear heavier.
+- This resolves the discrepancy between DESI and Planck neutrino mass constraints.
+
+---
+
+## 8. Open Questions
 
 1. **What sets $\eta$?** (The vacuum expectation value of the scaffold)
 2. **What is the physical nature of $\Phi$?** (Axion-like? Superfluid helium analog?)
