@@ -8,7 +8,7 @@ Dark Scaffold Cosmology: A Python Simulation
 
 # Dark Scaffold Cosmology
 
-> A Computational Proof of Pre-existing Dark Matter Scaffolding.
+A Computational Model of Pre-existing Dark Matter Scaffold.
 
 ## 📄 Technical Abstract
 
