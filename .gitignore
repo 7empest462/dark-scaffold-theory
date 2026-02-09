@@ -34,3 +34,12 @@ ENV/
 .idea/
 .vscode/
 *.swp
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+arxiv_submission.tar.gz
+qeios_submission.zip
+arxiv_submission/
