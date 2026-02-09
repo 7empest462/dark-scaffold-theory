@@ -1,4 +1,4 @@
-# Dark Scaffold Cosmology: A Computational Proof
+Dark Scaffold Cosmology: A Python Simulation
 
 **An Open-Source Cosmological Model Solving the JWST & Hubble Tension**
 
@@ -104,13 +104,6 @@ Testing light and time.
 - **S8 Tension:** Smooth lensing map (2.6 sigma) matches KiDS/DES weak lensing data.
 - **Reionization:** Early galaxy growth ionizes the universe by **z=7.4**, comfortably beating the "fog" without requiring extreme physics.
 
-## 🏆 Theory Verification & Verdict
-
-**Final Theory Score: 100/100 (Paradigm Shift)**
-
-The Dark Scaffold model has been rigorously tested against 8 major observational constraints. It not only matches the Standard Model but resolves its deepest tensions.
-
-![Likelihood Assessment](likelihood_assessment.png)
 
 ---
 
