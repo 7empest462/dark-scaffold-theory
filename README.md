@@ -1,14 +1,13 @@
-# Dark Scaffold Cosmology: A Computational Proof
+Dark Scaffold Cosmology: A Python Simulation
 
 **An Open-Source Cosmological Model Solving the JWST & Hubble Tension**
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18464392.svg)](https://doi.org/10.5281/zenodo.18464392)
 
-![Dark Scaffold Theory](README_cover.gif)
 
 # Dark Scaffold Cosmology
 
-> A Computational Proof of Pre-existing Dark Matter Scaffolding.
+A Computational Model of Pre-existing Dark Matter Scaffold.
 
 ## 📄 Technical Abstract
 
@@ -29,22 +28,22 @@ Instead of matter and dark matter forming simultaneously, this model posits that
 
 ### 🌟 Key Solved Problems
 
-This simple assumption resolves three of the biggest crises in modern cosmology:
+This simple assumption resolves many of the biggest crises in modern cosmology:
 
-| Anomaly                        | Standard Model Status           | Dark Scaffold Solution                                                                  |
+| Anomaly                        | Standard Model Status           |  Proposed Mechanism                                                                 |
 | ------------------------------ | ------------------------------- | --------------------------------------------------------------------------------------- |
-| **JWST "Impossible" Galaxies** | Fails (not enough time to form) | **Solved**: Matter fell into pre-existing gravity wells.                                |
-| **Missing Angular Momentum**   | Fails (requires fine-tuning)    | **Solved**: Asymmetric scaffold torques infalling matter.                               |
+| **JWST "Impossible" Galaxies** | Fails (not enough time to form) | **Mechanism**: Matter fell into pre-existing gravity wells.                                |
+| **Missing Angular Momentum**   | Fails (requires fine-tuning)    | **Mechanism**: Asymmetric scaffold torques infalling matter.                               |
 | **The Bullet Cluster**         | Complex explanation needed      | **Natural**: Baryons were never coupled to DM.                                          |
 | **Energy Budget**              | Requires 100% creation energy   | **Efficient**: Requires 20x less energy.                                                |
-| **Hubble Tension**             | Unresolved (67 vs 73 km/s/Mpc)  | **Solved**: Local flows accelerated by scaffold voids.                                  |
-| **Core-Cusp Problem**          | Predicts cusps (observed cores) | **Solved**: "Seepage" creates diffuse, non-cuspy cores.                                 |
-| **Missing Satellites**         | Predicts too many small halos   | **Solved**: HMF suggests fewer, larger structures.                                      |
-| **S8 Tension (Lensing)**       | Predicts clumpy universe        | **Solved**: Shear map (2.6sigma) is smoother than LambdaCDM.                            |
-| **Epoch of Reionization**      | Often late (z<6)                | **Solved**: Early start completes ionization by z=7.4.                                  |
-| **Early SMBHs (Quasars)**      | Cannot explain $10^9 M_\odot$   | **Solved**: Direct collapse seeds grow to $3 \times 10^{10} M_\odot$.                   |
+| **Hubble Tension**             | Unresolved (67 vs 73 km/s/Mpc)  | **Mechanism**: Local flows accelerated by scaffold voids.                                  |
+| **Core-Cusp Problem**          | Predicts cusps (observed cores) | **Mechanism**: "Seepage" creates diffuse, non-cuspy cores.                                 |
+| **Missing Satellites**         | Predicts too many small halos   | **Mechanism**: HMF suggests fewer, larger structures.                                      |
+| **S8 Tension (Lensing)**       | Predicts clumpy universe        | **Mechanism**: Shear map (2.6sigma) is smoother than LambdaCDM.                            |
+| **Epoch of Reionization**      | Often late (z<6)                | **Mechanism**: Early start completes ionization by z=7.4.                                  |
+| **Early SMBHs (Quasars)**      | Cannot explain $10^9 M_\odot$   | **Mechanism**: Direct collapse seeds grow to $3 \times 10^{10} M_\odot$.                   |
 | **Cyclic Origins**             | No evidence of pre-existence    | **Prediction**: Harmonic "Fractal Echoes" in LSS correlation function.                  |
-| **Axis of Evil (CMB)**         | Unexplained Alignment           | **Solved**: Caused by "Cosmic Spin" (Angular Momentum) of previous aeon.                |
+| **Axis of Evil (CMB)**         | Unexplained Alignment           | **Mechanism**: Caused by "Cosmic Spin" (Angular Momentum) of previous aeon.                |
 | **Fine Tuning**                | Parameters seem arbitrary       | **Explained**: Evolutionary selection for Black Hole production (Stability constraint). |
 
 ---
@@ -104,13 +103,6 @@ Testing light and time.
 - **S8 Tension:** Smooth lensing map (2.6 sigma) matches KiDS/DES weak lensing data.
 - **Reionization:** Early galaxy growth ionizes the universe by **z=7.4**, comfortably beating the "fog" without requiring extreme physics.
 
-## 🏆 Theory Verification & Verdict
-
-**Final Theory Score: 100/100 (Paradigm Shift)**
-
-The Dark Scaffold model has been rigorously tested against 8 major observational constraints. It not only matches the Standard Model but resolves its deepest tensions.
-
-![Likelihood Assessment](likelihood_assessment.png)
 
 ---
 
