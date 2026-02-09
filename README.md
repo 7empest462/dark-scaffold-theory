@@ -4,7 +4,7 @@ Dark Scaffold Cosmology: A Python Simulation
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18464392.svg)](https://doi.org/10.5281/zenodo.18464392)
 
-![Dark Scaffold Theory](README_cover.gif)
+![Dark Scaffold Theory]
 
 # Dark Scaffold Cosmology
 
@@ -29,7 +29,7 @@ Instead of matter and dark matter forming simultaneously, this model posits that
 
 ### 🌟 Key Solved Problems
 
-This simple assumption resolves three of the biggest crises in modern cosmology:
+This simple assumption resolves many of the biggest crises in modern cosmology:
 
 | Anomaly                        | Standard Model Status           | Dark Scaffold Solution                                                                  |
 | ------------------------------ | ------------------------------- | --------------------------------------------------------------------------------------- |
