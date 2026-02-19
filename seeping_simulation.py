@@ -15,14 +15,19 @@ Author: Rob Simens
 Theory: Pre-Existing Dark Scaffold Cosmology
 """
 
+import os
+import gc
+import argparse
 import numpy as np
 from scipy.ndimage import gaussian_filter, sobel
 from scipy.interpolate import RegularGridInterpolator
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 from dataclasses import dataclass
 from typing import Optional, Tuple, List
-import os
+from corsair_io import enforce_corsair_root, safe_savefig
 
 # Import our scaffold generator
 from scaffold_generator import DarkMatterScaffold, ScaffoldParameters
@@ -327,7 +332,8 @@ class SeepingSimulation:
         if save_path:
             plt.savefig(save_path, dpi=150, facecolor='black', edgecolor='none')
             print(f"Saved comparison to {save_path}")
-            
+            plt.close(fig)
+        
         return fig
     
     def create_animation(self, output_path: str, fps: int = 15):
@@ -410,18 +416,27 @@ class SeepingSimulation:
 
 def main():
     """Run the seeping simulation demo."""
+    parser = argparse.ArgumentParser(description='Big Bang Seeping Simulation')
+    parser.add_argument('--hires', action='store_true',
+                        help='Run at high resolution (200³ grid, 80k particles, 300 steps)')
+    args = parser.parse_args()
+
     print("=" * 60)
     print("BIG BANG SEEPING SIMULATION")
     print("Dark Scaffold Cosmology Theory")
+    if args.hires:
+        print("*** HIGH-RESOLUTION MODE ***")
     print("=" * 60)
     print()
     
-    output_dir = '/Users/robsimens/Documents/Cosmology/dark-scaffold-theory'
+    # ── Force all I/O to Corsair drive (disk8) ──────────────
+    output_dir = enforce_corsair_root()
     
     # Step 1: Generate the dark matter scaffold
     print("Step 1: Generating dark matter scaffold...")
+    grid_size = 200 if args.hires else 100
     scaffold_params = ScaffoldParameters(
-        grid_size=100,  # Smaller for faster simulation
+        grid_size=grid_size,
         box_size=500.0,
         spectral_index=-1.5,
         smoothing_scale=2.5,
@@ -437,17 +452,20 @@ def main():
     
     # Step 2: Run seeping simulation
     print("Step 2: Running seeping simulation...")
+    n_particles = 80000 if args.hires else 30000
+    n_timesteps = 300 if args.hires else 150
     seep_params = SeepingParameters(
         origin=(0.5, 0.5, 0.5),  # Big Bang at center
-        n_particles=30000,
-        n_timesteps=150,
+        n_particles=n_particles,
+        n_timesteps=n_timesteps,
         dm_attraction_strength=1.5,
         filament_preference=1.2,
         random_seed=123
     )
     
     sim = SeepingSimulation(scaffold, seep_params)
-    stats = sim.run(save_history=True)
+    save_history = not args.hires  # Skip history for hires to save memory
+    stats = sim.run(save_history=save_history)
     
     print()
     print("Final Statistics:")
@@ -463,12 +481,19 @@ def main():
     sim.visualize_comparison(
         save_path=os.path.join(output_dir, 'seeping_comparison.png')
     )
+    plt.close('all')
+    gc.collect()
     
-    # Animation
-    sim.create_animation(
-        output_path=os.path.join(output_dir, 'seeping_animation.gif'),
-        fps=12
-    )
+    # Animation (skip for hires — too memory-intensive)
+    if not args.hires:
+        sim.create_animation(
+            output_path=os.path.join(output_dir, 'seeping_animation.gif'),
+            fps=12
+        )
+        plt.close('all')
+        gc.collect()
+    else:
+        print("  Skipping animation in hires mode (memory-intensive)")
     
     print()
     print("=" * 60)

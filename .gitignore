@@ -1,3 +1,6 @@
+# Temp dir for Corsair drive I/O redirect
+.tmp/
+
 # MacOS
 .DS_Store
 .AppleDouble

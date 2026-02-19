@@ -123,7 +123,7 @@ def create_animation():
         # Try MP4 first (requires ffmpeg)
         # ani.save('seepage_video.mp4', writer='ffmpeg', fps=30, dpi=150)
         # To avoid ffmpeg dependency issues, let's use GIF which is universally supported by Pillow
-        ani.save('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/seepage.gif', writer='pillow', fps=30, dpi=120)
+        ani.save('/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/seepage.gif', writer='pillow', fps=30, dpi=120)
         print("   Success! Saved to seepage.gif")
     except Exception as e:
         print(f"   Error saving video: {e}")

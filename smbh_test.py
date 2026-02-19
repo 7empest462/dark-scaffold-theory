@@ -193,7 +193,7 @@ def run_smbh_test():
     plt.legend()
     plt.grid(alpha=0.2)
     
-    plt.savefig('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/smbh_test_result.png', 
+    plt.savefig('/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/smbh_test_result.png', 
                dpi=150, facecolor='black')
     print("   Saved to smbh_test_result.png")
     

@@ -38,17 +38,17 @@ def run_jwst_test():
     
     # High resolution to capture small early clumps
     params = SeepageParams(
-        n_particles=500000, 
+        n_particles=5000000, 
         gravity_strength=100.0, # Very deep wells
         friction=0.05,
-        n_steps=250 # More time for accretion
+        n_steps=500 # More time for accretion
     )
     
     sim = SeepageSimulation(scaffold, params)
     
     # Run steps to simulate early accumulation
     sim.initialize()
-    print("   Running first 250 steps (Early Universe)...")
+    print("   Running first 500 steps (Early Universe)...")
     for i in range(250):
         sim.step()
         
@@ -56,7 +56,7 @@ def run_jwst_test():
     print("\n2. Analyzing formed objects at z ~ 15...")
     
     # Bin particles
-    n_grid = 64
+    n_grid = 128
     density = np.zeros((n_grid, n_grid, n_grid))
     idx = (sim.positions / sim.box * n_grid).astype(int)
     idx = np.clip(idx, 0, n_grid-1)
@@ -64,12 +64,12 @@ def run_jwst_test():
     
     # Threshold for "Massive Galaxy"
     # Mean density ≈ 1.9. Threshold 8 => >4x overdensity
-    threshold = 8
+    threshold = 10
     peaks = density > threshold
     n_galaxies = np.sum(peaks)
     
-    print(f"   Particles per box: 500000")
-    print(f"   Analysis Grid: 64^3")
+    print(f"   Particles per box: 5000000")
+    print(f"   Analysis Grid: 128^3")
     print(f"   Found {n_galaxies} massive objects (> {threshold} particles) in 100 Mpc box.")
     
     # 3. Compare with Standard Model Prediction
@@ -101,7 +101,7 @@ def run_jwst_test():
                 f'{int(height)}',
                 ha='center', va='bottom', color='white', fontweight='bold')
                 
-    plt.savefig('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/jwst_test_result.png', 
+    plt.savefig('/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/jwst_test_result.png', 
                dpi=150, facecolor='black')
     print("   Saved to jwst_test_result.png")
     

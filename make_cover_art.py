@@ -112,7 +112,7 @@ def create_cover_art():
     # 150 frames @ 20fps = 7.5 seconds loop
     ani = animation.FuncAnimation(fig, update, frames=150, interval=50)
     
-    save_path = '/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/README_cover.gif'
+    save_path = '/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/README_cover.gif'
     print(f"4. Saving to {save_path}...")
     
     ani.save(save_path, writer='pillow', fps=20, dpi=80) # Lower DPI to keep file size manageable

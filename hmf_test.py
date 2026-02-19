@@ -152,7 +152,7 @@ def run_hmf_test():
     ax.tick_params(colors='white')
     plt.legend()
     
-    plt.savefig('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/hmf_test_result.png', 
+    plt.savefig('/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/hmf_test_result.png', 
                dpi=150, facecolor='black')
     print("   Saved to hmf_test_result.png")
     

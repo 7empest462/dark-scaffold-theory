@@ -16,12 +16,18 @@ Author: Rob Simens
 Theory: Pre-Existing Dark Scaffold Cosmology
 """
 
+import os
+import gc
+import argparse
 import numpy as np
 from scipy import stats
 from scipy.fft import fftn, fftfreq
 from scipy.interpolate import interp1d
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Optional
+from corsair_io import enforce_corsair_root, safe_savefig
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from scaffold_generator import DarkMatterScaffold, ScaffoldParameters
@@ -382,43 +388,19 @@ class TheoryLikelihoodCalculator:
                 
         return chi_sq, dof
     
-    def bayesian_evidence_ratio(self, n_lcdm_params: int = 6, 
-                                 n_scaffold_params: int = 8) -> float:
+    def statistical_summary(self) -> Dict[str, any]:
         """
-        Calculate approximate Bayesian evidence ratio (Dark Scaffold / ΛCDM).
+        Calculate a rigorous statistical summary of the theory's performance.
         
-        Uses the Bayesian Information Criterion (BIC) as approximation.
-        
-        Args:
-            n_lcdm_params: Number of free parameters in ΛCDM (typically 6)
-            n_scaffold_params: Number of free parameters in Dark Scaffold
-            
-        Returns:
-            Evidence ratio (>1 favors Dark Scaffold, <1 favors ΛCDM)
-        """
-        chi_sq, n_data = self.total_chi_squared()
-        
-        # BIC = χ² + k*ln(n) where k = number of parameters
-        # Lower BIC is better
-        bic_scaffold = chi_sq + n_scaffold_params * np.log(n_data)
-        
-        # For ΛCDM, assume it fits perfectly (χ² ≈ n_data for good fit)
-        bic_lcdm = n_data + n_lcdm_params * np.log(n_data)
-        
-        # Evidence ratio ∝ exp(-ΔBIC/2)
-        delta_bic = bic_scaffold - bic_lcdm
-        evidence_ratio = np.exp(-delta_bic / 2)
-        
-        return evidence_ratio
-    
-    def theory_score(self) -> Dict[str, any]:
-        """
-        Calculate an overall "theory viability score" (0-100).
-        
-        Combines:
-        - Statistical fit to observations
-        - Physical plausibility factors
-        - Predictive power
+        Returns dictionary containing:
+        - total_chi_squared: Raw χ²
+        - degrees_of_freedom: dof
+        - reduced_chi_squared: χ² / dof
+        - p_value: Probability of obtaining this χ² if theory were true
+        - delta_bic: Difference in Bayesian Information Criterion vs ΛCDM
+        - evidence_ratio: Bayes factor approximation (exp(-ΔBIC/2))
+        - evidence_interpretation: String interpretation of evidence (Jeffrey's scale)
+        - tensions: Dictionary of sigma tensions for each constraint
         """
         if not self.predictions:
             self.calculate_predictions()
@@ -430,73 +412,65 @@ class TheoryLikelihoodCalculator:
         # P-value from chi-squared
         if dof > 0:
             p_value = 1 - stats.chi2.cdf(chi_sq, dof)
+            reduced_chi_sq = chi_sq / dof
         else:
             p_value = 0.5
+            reduced_chi_sq = 0.0
             
-        # Evidence ratio
-        evidence_ratio = self.bayesian_evidence_ratio()
+        # Bayesian Evidence
+        # BIC = χ² + k*ln(n)
+        # We assume ΛCDM has χ² ≈ dof (good fit) for comparison
+        n_lcdm_params = 6
+        n_scaffold_params = 5  # Our free parameters
+        _, n_data = self.total_chi_squared()
         
-        # Physical plausibility bonuses
-        bonuses = {}
+        bic_scaffold = chi_sq + n_scaffold_params * np.log(n_data)
+        bic_lcdm = n_data + n_lcdm_params * np.log(n_data)
         
-        # Bonus: Energetically favorable (we calculated 20x less energy)
-        bonuses['energy_efficiency'] = 15  # +15 points
+        delta_bic = bic_scaffold - bic_lcdm
+        evidence_ratio = np.exp(-delta_bic / 2)
         
-        # Bonus: Explains Bullet Cluster naturally
-        if 'bullet_cluster_offset' in self.predictions:
-            predicted = self.predictions['bullet_cluster_offset']
-            observed = OBSERVATIONAL_CONSTRAINTS['bullet_cluster_offset'].observed_value
-            if abs(predicted - observed) < 100:
-                bonuses['bullet_cluster'] = 10  # +10 points
-                
-        # Bonus: Could explain early JWST galaxies
-        bonuses['early_galaxies'] = 10  # +10 points (qualitative)
-        
-        # Penalty: Requires explaining DM origin
-        bonuses['origin_question'] = -10  # -10 points
-        
-        # Base score from statistical fit (0-50 points)
-        # P-value > 0.05 is acceptable
-        if p_value > 0.05:
-            stat_score = 40 + 10 * min(p_value, 1)
-        else:
-            stat_score = 40 * (p_value / 0.05)
-            
-        # Evidence score (0-25 points)
-        if evidence_ratio > 1:
-            evidence_score = min(25, 15 + 10 * np.log10(evidence_ratio))
-        else:
-            evidence_score = max(0, 15 + 10 * np.log10(evidence_ratio))
-            
-        # Total score
-        total_bonuses = sum(bonuses.values())
-        total_score = stat_score + evidence_score + total_bonuses
-        total_score = max(0, min(100, total_score))
-        
+        # Calculate tensions (sigma deviation) for each constraint
+        tensions = {}
+        for name, constraint in OBSERVATIONAL_CONSTRAINTS.items():
+            if name in self.predictions:
+                pred = self.predictions[name]
+                obs = constraint.observed_value
+                unc = constraint.uncertainty
+                # Sigma tension = (val - obs) / uncertainty
+                tension = (pred - obs) / unc
+                tensions[name] = tension
+
         return {
-            'total_score': total_score,
-            'statistical_fit': stat_score,
-            'evidence_score': evidence_score,
-            'bonuses': bonuses,
-            'chi_squared': chi_sq,
+            'total_chi_squared': chi_sq,
             'degrees_of_freedom': dof,
+            'reduced_chi_squared': reduced_chi_sq,
             'p_value': p_value,
-            'evidence_ratio_vs_lcdm': evidence_ratio,
-            'interpretation': self._interpret_score(total_score)
+            'delta_bic': delta_bic,
+            'evidence_ratio': evidence_ratio,
+            'evidence_interpretation': self._interpret_jeffreys_scale(delta_bic),
+            'tensions': tensions
         }
     
-    def _interpret_score(self, score: float) -> str:
-        """Interpret the theory score."""
-        if score >= 80:
-            return "HIGHLY VIABLE - Strong observational support"
-        elif score >= 60:
-            return "VIABLE - Consistent with observations, worth pursuing"
-        elif score >= 40:
-            return "PLAUSIBLE - Some tension with data, needs refinement"
-        elif score >= 20:
-            return "CHALLENGED - Significant tension, major revisions needed"
+    def _interpret_jeffreys_scale(self, delta_bic: float) -> str:
+        """
+        Interpret the Delta BIC using Jeffrey's Scale.
+        Negative delta_bic favors Dark Scaffold, Positive favors ΛCDM.
+        """
+        if delta_bic <= -10:
+            return "Decisive evidence for Dark Scaffold"
+        elif delta_bic <= -6:
+            return "Strong evidence for Dark Scaffold"
+        elif delta_bic <= -2:
+            return "Positive evidence for Dark Scaffold"
+        elif delta_bic < 2:
+            return "Inconclusive / Indistinguishable"
+        elif delta_bic < 6:
+            return "Positive evidence against Dark Scaffold"
+        elif delta_bic < 10:
+            return "Strong evidence against Dark Scaffold"
         else:
-            return "UNLIKELY - Strong conflict with observations"
+            return "Decisive evidence against Dark Scaffold"
     
     def generate_report(self, save_path: Optional[str] = None) -> str:
         """Generate a comprehensive likelihood report."""
@@ -611,172 +585,149 @@ class TheoryLikelihoodCalculator:
         return report
     
     def visualize_results(self, save_path: Optional[str] = None) -> plt.Figure:
-        """Create visualization of theory assessment."""
+        """Create visualization of statistical assessment."""
         if not self.predictions:
             self.calculate_predictions()
             
-        score = self.theory_score()
+        stats = self.statistical_summary()
         
-        fig = plt.figure(figsize=(16, 10), facecolor='black')
+        fig = plt.figure(figsize=(16, 10), facecolor='white')
+        gs = fig.add_gridspec(2, 2)
         
-        # 1. Theory Score Gauge (top center)
-        ax1 = fig.add_subplot(2, 3, 2, polar=True, facecolor='#1a1a2e')
-        theta = np.linspace(0, np.pi, 100)
+        # 1. Sigma Tensions (Top Left)
+        ax1 = fig.add_subplot(gs[0, 0])
         
-        # Background arcs
-        colors = ['#e74c3c', '#f39c12', '#f1c40f', '#2ecc71']
-        for i, (start, end) in enumerate([(0, 0.25), (0.25, 0.5), (0.5, 0.75), (0.75, 1)]):
-            ax1.fill_between(theta, 0.6, 1.0, 
-                            where=(theta >= start*np.pi) & (theta <= end*np.pi),
-                            color=colors[i], alpha=0.7)
+        names = []
+        tensions = []
         
-        # Score needle
-        score_angle = (1 - score['total_score']/100) * np.pi
-        ax1.plot([score_angle, score_angle], [0, 0.9], 'white', linewidth=3)
-        ax1.scatter([score_angle], [0.9], c='white', s=100, zorder=5)
+        for name, tension in stats['tensions'].items():
+            names.append(name.replace('_', '\n'))
+            tensions.append(tension)
+            
+        y_pos = np.arange(len(names))
         
-        ax1.set_ylim(0, 1)
-        ax1.set_theta_offset(np.pi)
-        ax1.set_theta_direction(-1)
-        ax1.set_thetamin(0)
-        ax1.set_thetamax(180)
-        ax1.set_rticks([])
-        ax1.set_thetagrids([0, 45, 90, 135, 180], ['100', '75', '50', '25', '0'], color='white')
-        ax1.set_title(f'THEORY VIABILITY SCORE\n{score["total_score"]:.1f}/100', 
-                     color='white', fontsize=14, pad=20)
+        # Color coding by tension
+        colors = []
+        for t in tensions:
+            at = abs(t)
+            if at < 1: colors.append('#2ecc71')       # Green (< 1 sigma)
+            elif at < 3: colors.append('#f1c40f')     # Yellow (1-3 sigma)
+            else: colors.append('#e74c3c')            # Red (> 3 sigma)
+            
+        ax1.barh(y_pos, tensions, color=colors, edgecolor='black', alpha=0.8)
         
-        # 2. Predictions vs Observations (left side)
-        ax2 = fig.add_subplot(2, 3, 1, facecolor='#1a1a2e')
+        # Sigma bands
+        ax1.axvline(0, color='black', linewidth=1)
+        ax1.axvspan(-1, 1, color='green', alpha=0.1, label='1σ')
+        ax1.axvspan(-3, 3, color='yellow', alpha=0.1, label='3σ')
         
-        obs_names = []
+        ax1.set_yticks(y_pos)
+        ax1.set_yticklabels(names)
+        ax1.set_xlabel('Tension (σ)')
+        ax1.set_title('Tension with Observations', fontweight='bold')
+        ax1.grid(axis='x', linestyle='--', alpha=0.5)
+        
+        # 2. Predicted vs Observed (Top Right)
+        ax2 = fig.add_subplot(gs[0, 1])
+        
         obs_vals = []
         pred_vals = []
         errors = []
+        labels = []
         
         for name, constraint in OBSERVATIONAL_CONSTRAINTS.items():
             if name in self.predictions:
-                obs_names.append(name.replace('_', '\n'))
-                obs_vals.append(constraint.observed_value)
-                pred_vals.append(self.predictions[name])
-                errors.append(constraint.uncertainty)
+                # Normalize values for visualization (log scale handling if needed)
+                # Here we just normalize by observation to put them on same scale
+                obs = constraint.observed_value
+                pred = self.predictions[name]
+                
+                obs_vals.append(1.0)
+                pred_vals.append(pred / obs)
+                errors.append(constraint.uncertainty / obs)
+                labels.append(name.replace('_', '\n'))
         
-        x = np.arange(len(obs_names))
+        x = np.arange(len(labels))
+        width = 0.35
         
-        if len(x) > 0:
-            # Normalize for visualization
-            max_val = max(max(obs_vals), max(pred_vals))
-            norm_obs = [v/max_val*100 for v in obs_vals]
-            norm_pred = [v/max_val*100 for v in pred_vals]
-            norm_err = [e/max_val*100 for e in errors]
-            
-            ax2.barh(x - 0.2, norm_obs, 0.35, label='Observed', color='#3498db', alpha=0.8)
-            ax2.barh(x + 0.2, norm_pred, 0.35, label='Predicted', color='#e74c3c', alpha=0.8)
-            ax2.errorbar(norm_obs, x - 0.2, xerr=norm_err, fmt='none', color='white', capsize=3)
-            
-            ax2.set_yticks(x)
-            ax2.set_yticklabels(obs_names, fontsize=8, color='white')
-            ax2.set_xlabel('Normalized Value', color='white')
-            ax2.set_title('Predictions vs Observations', color='white')
-            ax2.tick_params(colors='white')
-            ax2.legend(facecolor='#1a1a2e', labelcolor='white')
+        ax2.errorbar(x, obs_vals, yerr=errors, fmt='o', color='black', 
+                    capsize=5, label='Observed (Normalized)')
+        ax2.scatter(x, pred_vals, color='red', marker='x', s=100, 
+                   label='Predicted', zorder=5)
         
-        for spine in ax2.spines.values():
-            spine.set_color('white')
+        ax2.axhline(1.0, color='black', linestyle='--', alpha=0.5)
+        ax2.set_xticks(x)
+        ax2.set_xticklabels(labels, rotation=45, ha='right')
+        ax2.set_ylabel('Value / Observed')
+        ax2.set_title('Relative Deviations', fontweight='bold')
+        ax2.legend()
+        ax2.grid(axis='y', linestyle='--', alpha=0.5)
         
-        # 3. Likelihood breakdown (right side)
-        ax3 = fig.add_subplot(2, 3, 3, facecolor='#1a1a2e')
+        # 3. Statistical Summary (Bottom Panel - Spanning Full Width)
+        ax3 = fig.add_subplot(gs[1, :])
+        ax3.axis('off')
         
-        if self.likelihoods:
-            names = [n.replace('_', '\n') for n in self.likelihoods.keys()]
-            values = list(self.likelihoods.values())
-            colors = ['#2ecc71' if v > 0.1 else '#e74c3c' if v < 0.01 else '#f1c40f' 
-                     for v in values]
-            
-            bars = ax3.bar(range(len(names)), values, color=colors, edgecolor='white')
-            ax3.axhline(y=0.05, color='white', linestyle='--', alpha=0.5, label='5% threshold')
-            ax3.set_xticks(range(len(names)))
-            ax3.set_xticklabels(names, rotation=45, ha='right', fontsize=8, color='white')
-            ax3.set_ylabel('Likelihood', color='white')
-            ax3.set_title('Individual Constraint Likelihoods', color='white')
-            ax3.tick_params(colors='white')
-            
-        for spine in ax3.spines.values():
-            spine.set_color('white')
+        summary_text = (
+            f"DARK SCAFFOLD THEORY - STATISTICAL SUMMARY\n"
+            f"==========================================\n\n"
+            f"Goodness of Fit:\n"
+            f"  • Total χ²: {stats['total_chi_squared']:.2f}\n"
+            f"  • Reduced χ²: {stats['reduced_chi_squared']:.2f}\n"
+            f"  • P-value: {stats['p_value']:.4e}\n\n"
+            f"Model Comparison (vs ΛCDM):\n"
+            f"  • Δ BIC: {stats['delta_bic']:.2f}\n"
+            f"  • Bayes Factor: {stats['evidence_ratio']:.4e}\n"
+            f"  • Verdict: {stats['evidence_interpretation']}\n\n"
+            f"Critical Tensions (>3σ):\n"
+        )
         
-        # 4. Score breakdown pie chart (bottom left)
-        ax4 = fig.add_subplot(2, 3, 4, facecolor='#1a1a2e')
-        
-        components = ['Statistical\nFit', 'Evidence\nScore', 'Physical\nBonuses']
-        sizes = [score['statistical_fit'], score['evidence_score'], 
-                sum(v for v in score['bonuses'].values() if v > 0)]
-        colors_pie = ['#3498db', '#9b59b6', '#2ecc71']
-        
-        wedges, texts, autotexts = ax4.pie(sizes, labels=components, autopct='%1.1f%%',
-                                           colors=colors_pie, textprops={'color': 'white'})
-        ax4.set_title('Score Components', color='white')
-        
-        # 5. Interpretation text (bottom center)
-        ax5 = fig.add_subplot(2, 3, 5, facecolor='#1a1a2e')
-        ax5.axis('off')
-        
-        interp_text = score['interpretation']
-        ax5.text(0.5, 0.7, interp_text, ha='center', va='center',
-                fontsize=14, color='white', wrap=True,
-                bbox=dict(boxstyle='round', facecolor='#2ecc71' if score['total_score'] >= 60 
-                         else '#f1c40f' if score['total_score'] >= 40 else '#e74c3c',
-                         alpha=0.8))
-        
-        # Key findings
-        findings = [
-            f"χ² = {score['chi_squared']:.2f} (dof={score['degrees_of_freedom']})",
-            f"P-value = {score['p_value']:.4f}",
-            f"Evidence ratio vs ΛCDM = {score['evidence_ratio_vs_lcdm']:.4f}"
+        critical_tensions = [
+            f"  • {name}: {tension:+.1f}σ" 
+            for name, tension in stats['tensions'].items() 
+            if abs(tension) > 3.0
         ]
-        ax5.text(0.5, 0.3, '\n'.join(findings), ha='center', va='center',
-                fontsize=10, color='white', family='monospace')
         
-        # 6. Summary (bottom right)
-        ax6 = fig.add_subplot(2, 3, 6, facecolor='#1a1a2e')
-        ax6.axis('off')
-        
-        summary_text = """
-DARK SCAFFOLD THEORY
-Summary Assessment
-
-✓ Energetically favorable
-✓ Explains Bullet Cluster
-✓ Supports early galaxy formation
-? Origin of scaffold TBD
-? CMB predictions needed
-
-Further research recommended
-to refine predictions.
-        """
-        ax6.text(0.1, 0.5, summary_text, ha='left', va='center',
-                fontsize=10, color='white', family='monospace')
+        if critical_tensions:
+            summary_text += "\n".join(critical_tensions)
+        else:
+            summary_text += "  None"
+            
+        ax3.text(0.5, 0.5, summary_text, ha='center', va='center',
+                fontsize=14, family='monospace', 
+                bbox=dict(boxstyle='round', facecolor='#f5f5f5', edgecolor='black', alpha=0.9))
         
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=150, facecolor='black', edgecolor='none')
+            plt.savefig(save_path, dpi=150)
             print(f"Saved visualization to {save_path}")
+            plt.close(fig)
             
         return fig
 
 
 def main():
     """Run the full likelihood assessment."""
+    parser = argparse.ArgumentParser(description='Dark Scaffold Theory Likelihood Assessment')
+    parser.add_argument('--hires', action='store_true',
+                        help='Run at high resolution (200³ grid, 100k particles, 400 steps)')
+    args = parser.parse_args()
+
     print("=" * 70)
     print("DARK SCAFFOLD THEORY - LIKELIHOOD ASSESSMENT")
+    if args.hires:
+        print("*** HIGH-RESOLUTION MODE ***")
     print("=" * 70)
     print()
     
-    output_dir = '/Users/robsimens/Documents/Cosmology/dark-scaffold-theory'
+    # ── Force all I/O to Corsair drive (disk8) ──────────────
+    output_dir = enforce_corsair_root()
     
     # Generate scaffold with optimized parameters
     print("Step 1: Generating dark matter scaffold...")
+    grid_size = 200 if args.hires else 100
     params = ScaffoldParameters(
-        grid_size=100,
+        grid_size=grid_size,
         box_size=500.0,
         spectral_index=-1.2,  # Adjusted for better filament statistics
         smoothing_scale=2.0,
@@ -787,17 +738,19 @@ def main():
     scaffold = DarkMatterScaffold(params)
     scaffold.generate()
     
-    stats = scaffold.get_filament_statistics()
-    print(f"  Filament volume fraction: {stats['volume_fraction_filaments']*100:.1f}%")
+    stats_data = scaffold.get_filament_statistics()
+    print(f"  Filament volume fraction: {stats_data['volume_fraction_filaments']*100:.1f}%")
     print()
     
     # Run seeping simulation for baryon field
     print("Step 2: Running seeping simulation...")
     from seeping_simulation import SeepingSimulation, SeepingParameters
     
+    n_particles = 100000 if args.hires else 40000
+    n_timesteps = 400 if args.hires else 200
     seep_params = SeepingParameters(
-        n_particles=40000,
-        n_timesteps=200,
+        n_particles=n_particles,
+        n_timesteps=n_timesteps,
         dm_attraction_strength=3.0,  # Stronger coupling
         filament_preference=2.0,
         random_seed=123
@@ -809,13 +762,14 @@ def main():
     print()
     
     # Calculate likelihood
-    print("Step 3: Calculating theory likelihood...")
+    # Calculate likelihood and generate report
+    print("Step 3: Statistical Assessment...")
     calc = TheoryLikelihoodCalculator(scaffold, baryon_field)
     
     # Generate report
     print()
     report = calc.generate_report(
-        save_path=f'{output_dir}/likelihood_report.txt'
+        save_path=os.path.join(output_dir, 'likelihood_report.txt')
     )
     print(report)
     
@@ -823,8 +777,10 @@ def main():
     print()
     print("Step 4: Generating visualization...")
     calc.visualize_results(
-        save_path=f'{output_dir}/likelihood_assessment.png'
+        save_path=os.path.join(output_dir, 'likelihood_assessment.png')
     )
+    plt.close('all')
+    gc.collect()
     
     print()
     print("Assessment complete!")

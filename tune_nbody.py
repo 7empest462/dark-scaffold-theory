@@ -1,6 +1,6 @@
 """Quick parameter sweep for N-body fine-tuning."""
 import sys
-sys.path.insert(0, '/Users/robsimens/Documents/Cosmology/dark-scaffold-theory')
+sys.path.insert(0, '/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory')
 
 from nbody_simulation import FastNBodySimulation, FastNBodyParams
 from scaffold_generator import DarkMatterScaffold, ScaffoldParameters
@@ -56,5 +56,5 @@ print(f"BEST RESULT: {best_corr:.4f}")
 print(f"Config: dm={best_cfg['dm_coupling']}, exp={best_cfg['expansion_velocity']}")
 print("=" * 60)
 
-best_sim.visualize_final('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/nbody_tuned.png')
+best_sim.visualize_final('/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/nbody_tuned.png')
 print("\nSaved: nbody_tuned.png")

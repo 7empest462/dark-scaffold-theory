@@ -12,9 +12,15 @@ we model the state *immediately after* inflation/expansion.
 This matches the `cosmos.py` intuition: "The Fill (The Seepage)" filling "The Cracks".
 """
 
+import os
+import gc
+import argparse
 import numpy as np
 from dataclasses import dataclass
 from typing import Optional
+from corsair_io import enforce_corsair_root, safe_savefig
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from scipy.interpolate import RegularGridInterpolator
@@ -180,19 +186,34 @@ class SeepageSimulation:
         print(f"Saved to {filename}")
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Distributed Infall (Seepage) Simulation')
+    parser.add_argument('--hires', action='store_true',
+                        help='Run at high resolution (128³ grid, 30k particles)')
+    args = parser.parse_args()
+
+    # ── Force all I/O to Corsair drive (disk8) ──────────────
+    output_dir = enforce_corsair_root()
+
+    if args.hires:
+        print("*** HIGH-RESOLUTION MODE ***")
+
     print("Generating Scaffold...")
+    grid_size = 128 if args.hires else 64
     scaffold = DarkMatterScaffold(ScaffoldParameters(
-        grid_size=64, box_size=100.0, spectral_index=-1.5,
+        grid_size=grid_size, box_size=100.0, spectral_index=-1.5,
         smoothing_scale=2.0, filament_threshold=0.5, random_seed=42
     ))
     scaffold.generate()
     
+    n_particles = 30000 if args.hires else 10000
     params = SeepageParams(
-        n_particles=10000, 
+        n_particles=n_particles, 
         gravity_strength=80.0, # Very strong pull
         friction=0.05          # Significant cooling
     )
     
     sim = SeepageSimulation(scaffold, params)
     sim.run()
-    sim.visualize('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/seepage_result.png')
+    sim.visualize(os.path.join(output_dir, 'seepage_result.png'))
+    plt.close('all')
+    gc.collect()

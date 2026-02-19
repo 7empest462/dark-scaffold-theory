@@ -15,13 +15,19 @@ Author: Rob Simens
 Theory: Pre-Existing Dark Scaffold Cosmology
 """
 
+import os
+import gc
+import argparse
 import numpy as np
 from scipy.ndimage import gaussian_filter
 from scipy.fft import fftn, ifftn, fftfreq
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from dataclasses import dataclass
 from typing import Tuple, Optional
+from corsair_io import enforce_corsair_root, safe_savefig
 
 
 @dataclass
@@ -215,6 +221,7 @@ class DarkMatterScaffold:
         if save_path:
             plt.savefig(save_path, dpi=150, facecolor='black', edgecolor='none')
             print(f"Saved visualization to {save_path}")
+            plt.close(fig)
             
         return fig
     
@@ -280,21 +287,33 @@ class DarkMatterScaffold:
         if save_path:
             plt.savefig(save_path, dpi=150, facecolor='black', edgecolor='none')
             print(f"Saved 3D visualization to {save_path}")
+            plt.close(fig)
             
         return fig
 
 
 def main():
     """Demo the scaffold generator."""
+    parser = argparse.ArgumentParser(description='Dark Matter Scaffold Generator')
+    parser.add_argument('--hires', action='store_true',
+                        help='Run at high resolution (256³ grid)')
+    args = parser.parse_args()
+
     print("=" * 60)
     print("DARK MATTER SCAFFOLD GENERATOR")
     print("Pre-Existing Dark Scaffold Cosmology Theory")
+    if args.hires:
+        print("*** HIGH-RESOLUTION MODE ***")
     print("=" * 60)
     print()
     
+    # ── Force all I/O to Corsair drive (disk8) ──────────────
+    output_dir = enforce_corsair_root()
+
     # Create scaffold with specific parameters
+    grid_size = 256 if args.hires else 128
     params = ScaffoldParameters(
-        grid_size=128,
+        grid_size=grid_size,
         box_size=500.0,  # 500 Mpc box
         spectral_index=-1.5,  # Favors large-scale filamentary structure
         smoothing_scale=2.5,
@@ -326,21 +345,23 @@ def main():
     # 2D slice
     fig_2d = scaffold.visualize_slice(
         axis=2, 
-        save_path='/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/scaffold_slice.png'
+        save_path=os.path.join(output_dir, 'scaffold_slice.png')
     )
+    plt.close('all')
+    gc.collect()
     
     # 3D view
     fig_3d = scaffold.visualize_3d(
         threshold=1.0,
-        save_path='/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/scaffold_3d.png'
+        save_path=os.path.join(output_dir, 'scaffold_3d.png')
     )
+    plt.close('all')
+    gc.collect()
     
     print()
     print("Dark matter scaffold generation complete!")
     print("This represents the pre-existing structure into which")
     print("baryonic matter will 'seep' after the Big Bang.")
-    
-    plt.show()
     
     return scaffold
 

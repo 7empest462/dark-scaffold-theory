@@ -2,8 +2,8 @@
 # Runner script for Dark Scaffold cosmology simulations
 # Ensures the correct Python environment is used
 
-PYTHON="/opt/homebrew/Caskroom/miniforge/base/envs/cosmology/bin/python"
-PROJECT_DIR="/Users/robsimens/Documents/Cosmology/dark-scaffold-theory"
+PYTHON="/Users/7empest_mac/miniforge3/envs/cosmology_new/bin/python"
+PROJECT_DIR="/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory"
 
 cd "$PROJECT_DIR"
 

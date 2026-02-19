@@ -46,9 +46,21 @@ N-body simulations have confirmed that if baryonic matter is distributed uniform
 | Model             | Energy Required | Status                  |
 | ----------------- | --------------- | ----------------------- |
 | Standard Big Bang | 2.73 × 10⁷¹ J   | Baseline                |
-| Dark Scaffold     | 1.35 × 10⁷⁰ J   | **~20× More Efficient** |
+| Dark Scaffold     | 2.96 × 10⁷¹ J   | **0.92x (Neutral)**     |
 
-The theory creates a universe with significantly less "creation energy" required.
+The theory is thermodynamically neutral, providing no significant energy advantage (unlike earlier estimates). Its primary value lies in its structural predictions rather than energetics.
+
+### 2.3 Statistical Performance
+
+We conducted a rigorous likelihood analysis against current observational datasets.
+
+| Metric | Result | Interpretation |
+| :--- | :--- | :--- |
+| **Reduced $\chi^2_\nu$** | **1845.32** | **Critical Tension (Spectral)** |
+| **$\Delta$ BIC** | **5420.1** | **Decisive Evidence Against (Spectral)** |
+
+**The Spectral-Structural Tension:**
+While the theory provides excellent solutions to *structural* anomalies (galaxies, voids, quasars), the current parameterization struggles to reproduce the precise acoustic peaks of the CMB power spectrum. This suggests the theory may need extension (e.g., evolving scaffold potential) to match the background expansion history of $\Lambda$CDM while retaining its structural advantages.
 
 ---
 
@@ -56,35 +68,48 @@ The theory creates a universe with significantly less "creation energy" required
 
 ### 3.1 The "Too Early" Galaxy Problem (JWST)
 
-**Problem:** JWST observes massive galaxies at z > 10 formed too quickly for standard ΛCDM.
-**PEDS Proposal:** If gravitational wells **already existed**, baryonic matter would not need to wait for DM to clump. It would fall into pre-existing wells immediately after cooling. This makes early massive galaxies a natural consequence of the model.
+**Problem:** STANDARD $\Lambda$CDM predicts ~0.5 massive galaxies ($>10^{10} M_\odot$) in a 100 Mpc box at $z=15$, due to the slow hierarchical assembly of dark matter halos.
+**PEDS Evidence:** Our simulations (`jwst_test.py`) produce **683** massive galaxies in the same volume.
+**Mechanism:** The pre-existing scaffold provides deep potential wells immediately after recombination. Baryonic matter falls into these wells and forms galaxies without waiting for the dark matter to collapse first.
 
-### 3.2 Galaxy Rotation Curves
+### 3.2 Cosmic Void Topology ("Dirty Voids")
+
+**Problem:** Standard cosmology predicts cosmic voids to be extremely empty ($\rho < 0.1 \bar{\rho}$) due to the effective clearing by dark energy expansion.
+**PEDS Evidence:** Our simulations (`void_test.py`) reveal a mean void density of **$0.85 \bar{\rho}$**.
+**Mechanism:** The "seeping" mechanism involves matter flowing from a uniform background into filaments. This process is less efficient than expansion-driven clearing, leaving a signature of "dirty voids" containing significant baryonic debris.
+
+### 3.3 Supermassive Black Hole (SMBH) Seeds
+
+**Problem:** Quasars with masses $M \sim 10^9 M_\odot$ are observed at $z=7$. Growing these from standard stellar seeds ($100 M_\odot$) requires unphysical super-Eddington accretion.
+**PEDS Evidence:** Our simulations (`smbh_test.py`) show gas infall rates of **$0.19 M_\odot/\text{yr}$** into scaffold nodes, exceeding the $0.10 M_\odot/\text{yr}$ threshold for Direct Collapse Black Hole (DCBH) formation.
+**Mechanism:** The steep potential gradients of the pre-existing nodes suppress fragmentation and trigger direct collapse into $10^5 M_\odot$ seeds, which easily grow to $10^9 M_\odot$ by $z=7$.
+
+### 3.4 Galaxy Rotation Curves
 
 **Problem:** Stars at galaxy edges orbit too fast.
 **PEDS Proposal:** Theoretical calculations (`grid_search.py`) demonstrate that a pre-existing density gradient of **k ≈ 1.0** (linear growth with distance) produces flat rotation curves without modifying gravity.
 
-### 3.3 The Bullet Cluster
+### 3.5 The Bullet Cluster
 
 **Problem:** DM and baryons are separated in colliding clusters.
 **PEDS Proposal:** This separation is expected since baryons are "guests" in the DM host structure and can be stripped away while the scaffold remains.
 
-### 3.4 The Hubble Tension
+### 3.6 The Hubble Tension
 
 **Problem:** Measurements of the universe's expansion rate (H0) disagree. Early universe (CMB) suggests 67.4 km/s/Mpc, while local universe (Cepheids/Supernovae) measures 73.2 km/s/Mpc.
 **PEDS Proposal:** The pre-existing scaffold adds a primordial attractive potential that accelerates local flows. Our test (`hubble_tension_test.py`) yields a local expansion rate of **73.2 km/s/Mpc**, bridging the gap from the Recombination prediction (67.4).
 
-### 3.5 The Core-Cusp Problem
+### 3.7 The Core-Cusp Problem
 
 **Problem:** CDM simulations predict "cuspy" (dense) centers in dwarf galaxies, but observations show flat, diffuse "cores".
 **PEDS Proposal:** Our simulated radial density profiles (`filament_test.py`) reveal a slope of -0.08, flatter than the NFW prediction (-1.0). This indicates that "seepage" — gradual accumulation into a static potential — may produce the diffuse cores observed in reality.
 
-### 3.6 The Missing Satellites Problem
+### 3.8 The Missing Satellites Problem
 
 **Problem:** Standard models predict thousands of tiny dwarf galaxies orbiting the Milky Way; we see only dozens.
 **PEDS Proposal:** Our phase space analysis (`phase_space_test.py`) suggests a "Cold Collapse" regime with low velocity dispersion. This gentle accretion mode suppresses the violent fragmentation required to form thousands of sub-halos.
 
-### 3.7 Extreme Neutrino Events (KM3NeT Evidence)
+### 3.9 Extreme Neutrino Events (KM3NeT Evidence)
 
 **Problem:** Detection of ultra-high-energy neutrinos (100-220 PeV) by KM3NeT (Event KM3-230213A) is difficult to explain with standard astrophysical sources.
 **PEDS Proposal:** We hypothesize that this event could be a signature of an exploding **Scaffold-Coupled Primordial Black Hole (PBH)**.

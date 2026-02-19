@@ -108,7 +108,7 @@ def run_void_test():
     ax.tick_params(colors='white')
     plt.legend()
     
-    plt.savefig('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/void_test_result.png', 
+    plt.savefig('/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/void_test_result.png', 
                dpi=150, facecolor='black')
     print("   Saved to void_test_result.png")
     

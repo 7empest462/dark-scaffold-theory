@@ -162,7 +162,7 @@ def run_spin_test():
     ax.set_ylabel("Mpc", color='white')
     ax.tick_params(colors='white')
     
-    plt.savefig('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/spin_test_result.png', 
+    plt.savefig('/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/spin_test_result.png', 
                dpi=150, facecolor='black')
     print(f"   Plotted {count_plotted} halo spins on slice.")
     print("   Saved to spin_test_result.png")

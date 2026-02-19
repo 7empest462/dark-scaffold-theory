@@ -15,9 +15,15 @@ Author: Rob Simens
 Theory: Pre-Existing Dark Scaffold Cosmology
 """
 
+import os
+import gc
+import argparse
 import numpy as np
 from dataclasses import dataclass
 from typing import Tuple
+from corsair_io import enforce_corsair_root, safe_savefig
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
@@ -322,6 +328,7 @@ class EnergyBudgetCalculator:
         if save_path:
             plt.savefig(save_path, dpi=150, facecolor='black', edgecolor='none')
             print(f"Saved energy comparison to {save_path}")
+            plt.close(fig)
             
         return fig
     
@@ -363,9 +370,16 @@ class EnergyBudgetCalculator:
 
 def main():
     """Run the energy budget analysis."""
+    parser = argparse.ArgumentParser(description='Energy Budget Analysis')
+    parser.add_argument('--hires', action='store_true',
+                        help='High-resolution mode (no effect on analytical calculations)')
+    args = parser.parse_args()
+
     print("=" * 60)
     print("ENERGY BUDGET ANALYSIS")
     print("Dark Scaffold Cosmology Theory")
+    if args.hires:
+        print("*** HIGH-RESOLUTION MODE ***")
     print("=" * 60)
     
     calc = EnergyBudgetCalculator()
@@ -416,10 +430,13 @@ def main():
     print("standard cosmology, where all matter/energy must be created ex nihilo.")
     
     # Create visualization
-    output_dir = '/Users/robsimens/Documents/Cosmology/dark-scaffold-theory'
+    # ── Force all I/O to Corsair drive (disk8) ──────────────
+    output_dir = enforce_corsair_root()
     calc.visualize_comparison(
-        save_path=f'{output_dir}/energy_comparison.png'
+        save_path=os.path.join(output_dir, 'energy_comparison.png')
     )
+    plt.close('all')
+    gc.collect()
     
     print()
     print("=" * 60)

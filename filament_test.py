@@ -135,7 +135,7 @@ def run_filament_test():
     plt.legend()
     plt.grid(alpha=0.2)
     
-    plt.savefig('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/filament_test_result.png', 
+    plt.savefig('/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/filament_test_result.png', 
                dpi=150, facecolor='black')
     print("   Saved to filament_test_result.png")
     

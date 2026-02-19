@@ -111,7 +111,7 @@ def run_phase_space_test():
     ax.tick_params(colors='white')
     plt.legend()
     
-    plt.savefig('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/phase_space_result.png', 
+    plt.savefig('/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/phase_space_result.png', 
                dpi=150, facecolor='black')
     print("   Saved to phase_space_result.png")
     

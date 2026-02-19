@@ -14,12 +14,18 @@ Author: Rob Simens
 Theory: Pre-Existing Dark Scaffold Cosmology
 """
 
+import os
+import gc
+import argparse
 import numpy as np
 from scipy.optimize import minimize, differential_evolution
 from scipy import stats
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
 from typing import Dict, Tuple, Optional
+from corsair_io import enforce_corsair_root, safe_savefig
 import time
 
 from scaffold_generator import DarkMatterScaffold, ScaffoldParameters
@@ -35,12 +41,13 @@ from theory_likelihood import (
 class OptimizationResult:
     """Results from parameter optimization."""
     best_params: Dict[str, float]
-    best_score: float
-    chi_squared: float
+    best_chi_squared: float
+    best_reduced_chi_squared: float
+    best_delta_bic: float
     n_evaluations: int
     optimization_time: float
     predictions: Dict[str, float]
-    improvement: float
+    chi_squared_improvement: float
 
 
 class TheoryOptimizer:
@@ -65,7 +72,7 @@ class TheoryOptimizer:
         
     def evaluate_parameters(self, params_array: np.ndarray) -> float:
         """
-        Evaluate a parameter set and return negative score (for minimization).
+        Evaluate a parameter set and return chi-squared (for minimization).
         
         Parameter array structure:
         [0] spectral_index: -0.5 to -2.5
@@ -108,29 +115,30 @@ class TheoryOptimizer:
             sim = SeepingSimulation(scaffold, seep_params)
             sim.run(save_history=False)
             
-            # Calculate score
+            # Calculate chi-squared
             calc = TheoryLikelihoodCalculator(scaffold, sim.baryonic_density)
-            score_data = calc.theory_score()
-            score = score_data['total_score']
+            stats = calc.statistical_summary()
+            chi_sq = stats['total_chi_squared']
             
             # Track history
             self.history.append({
                 'params': params_array.copy(),
-                'score': score,
+                'chi_squared': chi_sq,
                 'predictions': calc.predictions.copy()
             })
             
-            if score > self.best_score_so_far:
-                self.best_score_so_far = score
+            # Track best (lowest) chi-squared
+            if self.best_score_so_far == 0 or chi_sq < self.best_score_so_far:
+                self.best_score_so_far = chi_sq
                 if self.verbose and self.evaluation_count % 5 == 0:
-                    print(f"  Eval {self.evaluation_count}: New best score = {score:.1f}")
+                    print(f"  Eval {self.evaluation_count}: New best χ² = {chi_sq:.2f}")
                     
         except Exception as e:
-            score = 0.0
+            chi_sq = 1e10  # Massive penalty for failure
             if self.verbose:
                 print(f"  Eval {self.evaluation_count}: Error - {e}")
                 
-        return -score  # Negative for minimization
+        return chi_sq  # Positive for minimization
     
     def optimize(self, method: str = 'differential_evolution',
                  max_evaluations: int = 100) -> OptimizationResult:
@@ -197,9 +205,9 @@ class TheoryOptimizer:
         best_params = result.x
         final_result = self._full_evaluation(best_params)
         
-        # Calculate improvement
-        initial_score = 25.0  # From our first run
-        improvement = final_result['score'] - initial_score
+        # Calculate improvement (reduction in chi-squared)
+        initial_chi_sq = 2500.0  # Approximate starting point
+        improvement = initial_chi_sq - final_result['total_chi_squared']
         
         opt_result = OptimizationResult(
             best_params={
@@ -209,12 +217,13 @@ class TheoryOptimizer:
                 'dm_attraction_strength': best_params[3],
                 'filament_preference': best_params[4],
             },
-            best_score=final_result['score'],
-            chi_squared=final_result['chi_squared'],
+            best_chi_squared=final_result['total_chi_squared'],
+            best_reduced_chi_squared=final_result['reduced_chi_squared'],
+            best_delta_bic=final_result['delta_bic'],
             n_evaluations=self.evaluation_count,
             optimization_time=elapsed_time,
             predictions=final_result['predictions'],
-            improvement=improvement
+            chi_squared_improvement=improvement
         )
         
         if self.verbose:
@@ -248,11 +257,12 @@ class TheoryOptimizer:
         sim.run(save_history=False)
         
         calc = TheoryLikelihoodCalculator(scaffold, sim.baryonic_density)
-        score_data = calc.theory_score()
+        stats = calc.statistical_summary()
         
         return {
-            'score': score_data['total_score'],
-            'chi_squared': score_data['chi_squared'],
+            'total_chi_squared': stats['total_chi_squared'],
+            'reduced_chi_squared': stats['reduced_chi_squared'],
+            'delta_bic': stats['delta_bic'],
             'predictions': calc.predictions,
             'scaffold': scaffold,
             'simulation': sim,
@@ -263,16 +273,17 @@ class TheoryOptimizer:
         """Print optimization results."""
         print()
         print("=" * 60)
-        print("OPTIMIZATION RESULTS")
+        print("OPTIMIZATION RESULTS - STATISTICAL SUMMARY")
         print("=" * 60)
         print()
         print("Best Parameters Found:")
         for name, value in result.best_params.items():
             print(f"  {name}: {value:.4f}")
         print()
-        print(f"Final Score: {result.best_score:.1f}/100")
-        print(f"Improvement: {'+' if result.improvement > 0 else ''}{result.improvement:.1f} points")
-        print(f"Chi-squared: {result.chi_squared:.2f}")
+        print(f"Reduced χ²: {result.best_reduced_chi_squared:.2f}")
+        print(f"Total χ²: {result.best_chi_squared:.2f}")
+        print(f"Δ BIC vs ΛCDM: {result.best_delta_bic:.2f}")
+        print(f"Improvement in χ²: {result.chi_squared_improvement:.2f}")
         print()
         print(f"Optimization took {result.optimization_time:.1f} seconds")
         print(f"Number of evaluations: {result.n_evaluations}")
@@ -281,8 +292,11 @@ class TheoryOptimizer:
         for name, value in result.predictions.items():
             obs = OBSERVATIONAL_CONSTRAINTS.get(name)
             if obs:
-                status = "✓" if abs(value - obs.observed_value) < 2*obs.uncertainty else "✗"
-                print(f"  {status} {name}: {value:.4f} (observed: {obs.observed_value:.4f})")
+                # Calculate sigma tension
+                tension = (value - obs.observed_value) / obs.uncertainty
+                abs_tension = abs(tension)
+                status = "✓" if abs_tension < 1.0 else "~" if abs_tension < 3.0 else "!"
+                print(f"  {status} {name}: {value:.4f} (Obs: {obs.observed_value:.4f}, Tension: {tension:+.1f}σ)")
             else:
                 print(f"  - {name}: {value:.4f}")
         print()
@@ -291,34 +305,37 @@ class TheoryOptimizer:
     def visualize_optimization(self, result: OptimizationResult, 
                                save_path: Optional[str] = None) -> plt.Figure:
         """Visualize the optimization process and results."""
-        fig = plt.figure(figsize=(16, 10), facecolor='black')
+        fig = plt.figure(figsize=(16, 10), facecolor='white')
+        gs = fig.add_gridspec(2, 2)
         
-        # 1. Score improvement over iterations
-        ax1 = fig.add_subplot(2, 2, 1, facecolor='#1a1a2e')
+        # 1. Chi-squared improvement over iterations (Top Left)
+        ax1 = fig.add_subplot(gs[0, 0])
         
         if self.history:
-            scores = [h['score'] for h in self.history]
-            ax1.plot(scores, color='#3498db', linewidth=1, alpha=0.5)
+            # Fliter out failed runs (massive chi-squared)
+            scores = [h['chi_squared'] for h in self.history if h['chi_squared'] < 1e9]
             
-            # Running maximum
-            running_max = np.maximum.accumulate(scores)
-            ax1.plot(running_max, color='#2ecc71', linewidth=2, label='Best so far')
+            if scores:
+                ax1.plot(scores, color='#3498db', linewidth=1, alpha=0.5, label='Evaluations')
+                
+                # Running minimum (best chi-squared so far)
+                running_min = np.minimum.accumulate(scores)
+                ax1.plot(running_min, color='#2ecc71', linewidth=2, label='Best so far')
+                
+                ax1.axhline(y=result.best_chi_squared, color='#e74c3c', linestyle='--', 
+                           label=f'Final: {result.best_chi_squared:.2f}')
+                
+                # Log scale for y-axis often better for chi-squared
+                ax1.set_yscale('log')
+                
+        ax1.set_xlabel('Evaluation')
+        ax1.set_ylabel('Total χ² (Log Scale)')
+        ax1.set_title('Optimization Progress', fontweight='bold')
+        ax1.legend()
+        ax1.grid(True, which="both", ls="-", alpha=0.2)
             
-            ax1.axhline(y=result.best_score, color='#e74c3c', linestyle='--', 
-                       label=f'Final: {result.best_score:.1f}')
-            ax1.axhline(y=25, color='white', linestyle=':', alpha=0.5,
-                       label='Initial: 25.0')
-            
-        ax1.set_xlabel('Evaluation', color='white')
-        ax1.set_ylabel('Theory Score', color='white')
-        ax1.set_title('Optimization Progress', color='white')
-        ax1.tick_params(colors='white')
-        ax1.legend(facecolor='#1a1a2e', labelcolor='white')
-        for spine in ax1.spines.values():
-            spine.set_color('white')
-            
-        # 2. Parameter values comparison
-        ax2 = fig.add_subplot(2, 2, 2, facecolor='#1a1a2e')
+        # 2. Parameter values (Top Right)
+        ax2 = fig.add_subplot(gs[0, 1])
         
         param_names = list(result.best_params.keys())
         param_values = list(result.best_params.values())
@@ -337,107 +354,101 @@ class TheoryOptimizer:
             lo, hi = bounds_dict[name]
             normalized.append((val - lo) / (hi - lo))
             
+        y_pos = np.arange(len(param_names))
         colors = plt.cm.viridis(np.linspace(0.3, 0.9, len(param_names)))
-        bars = ax2.barh(range(len(param_names)), normalized, color=colors)
+        
+        ax2.barh(y_pos, normalized, color=colors, edgecolor='black')
         
         # Add value labels
-        for i, (bar, val) in enumerate(zip(bars, param_values)):
-            ax2.text(bar.get_width() + 0.02, bar.get_y() + bar.get_height()/2,
-                    f'{val:.2f}', va='center', color='white', fontsize=10)
+        for i, (norm, val) in enumerate(zip(normalized, param_values)):
+            ax2.text(norm + 0.02, i, f'{val:.2f}', va='center', fontweight='bold')
         
-        ax2.set_yticks(range(len(param_names)))
-        ax2.set_yticklabels([n.replace('_', '\n') for n in param_names], color='white', fontsize=9)
-        ax2.set_xlabel('Normalized Parameter Value', color='white')
-        ax2.set_title('Optimized Parameters', color='white')
-        ax2.set_xlim(0, 1.3)
-        ax2.tick_params(colors='white')
-        for spine in ax2.spines.values():
-            spine.set_color('white')
+        ax2.set_yticks(y_pos)
+        ax2.set_yticklabels([n.replace('_', '\n') for n in param_names])
+        ax2.set_xlabel('Normalized Parameter Value (0=Min, 1=Max)')
+        ax2.set_title('Optimized Parameters', fontweight='bold')
+        ax2.set_xlim(0, 1.25)
+        ax2.grid(axis='x', linestyle='--', alpha=0.5)
             
-        # 3. Before/After comparison (gauge)
-        ax3 = fig.add_subplot(2, 2, 3, polar=True, facecolor='#1a1a2e')
+        # 3. Statistical Summary Text (Bottom Left)
+        ax3 = fig.add_subplot(gs[1, 0])
+        ax3.axis('off')
         
-        theta = np.linspace(0, np.pi, 100)
-        colors_gauge = ['#e74c3c', '#f39c12', '#f1c40f', '#2ecc71']
-        for i, (start, end) in enumerate([(0, 0.25), (0.25, 0.5), (0.5, 0.75), (0.75, 1)]):
-            ax3.fill_between(theta, 0.5, 1.0,
-                            where=(theta >= start*np.pi) & (theta <= end*np.pi),
-                            color=colors_gauge[i], alpha=0.7)
-            
-        # Before needle (25/100)
-        before_angle = (1 - 25/100) * np.pi
-        ax3.plot([before_angle, before_angle], [0, 0.8], color='gray', linewidth=2)
-        ax3.scatter([before_angle], [0.8], c='gray', s=80, zorder=5, label='Before: 25')
+        summary_text = (
+            f"OPTIMIZATION RESULTS\n"
+            f"====================\n\n"
+            f"Best Reduced χ²: {result.best_reduced_chi_squared:.2f}\n"
+            f"Best Total χ²: {result.best_chi_squared:.2f}\n"
+            f"Δ BIC vs ΛCDM: {result.best_delta_bic:.2f}\n\n"
+            f"Evaluations: {result.n_evaluations}\n"
+            f"Time: {result.optimization_time:.1f}s\n"
+        )
         
-        # After needle
-        after_angle = (1 - result.best_score/100) * np.pi
-        ax3.plot([after_angle, after_angle], [0, 0.9], color='white', linewidth=3)
-        ax3.scatter([after_angle], [0.9], c='white', s=100, zorder=5, 
-                   label=f'After: {result.best_score:.1f}')
+        ax3.text(0.5, 0.5, summary_text, ha='center', va='center',
+                fontsize=14, family='monospace', 
+                bbox=dict(boxstyle='round', facecolor='#f5f5f5', edgecolor='black', alpha=0.9))
         
-        ax3.set_ylim(0, 1)
-        ax3.set_theta_offset(np.pi)
-        ax3.set_theta_direction(-1)
-        ax3.set_thetamin(0)
-        ax3.set_thetamax(180)
-        ax3.set_rticks([])
-        ax3.set_thetagrids([0, 45, 90, 135, 180], ['100', '75', '50', '25', '0'], color='white')
-        ax3.set_title(f'Score Improvement: +{result.improvement:.1f}', color='white', pad=20)
-        ax3.legend(loc='lower center', facecolor='#1a1a2e', labelcolor='white')
+        # 4. Constraint Tensions (Bottom Right)
+        ax4 = fig.add_subplot(gs[1, 1])
         
-        # 4. Constraint satisfaction
-        ax4 = fig.add_subplot(2, 2, 4, facecolor='#1a1a2e')
-        
-        constraint_names = []
-        satisfactions = []
+        obs_names = []
+        tensions = []
         
         for name, constraint in OBSERVATIONAL_CONSTRAINTS.items():
             if name in result.predictions:
+                obs_names.append(name.replace('_', '\n'))
                 pred = result.predictions[name]
                 obs = constraint.observed_value
                 unc = constraint.uncertainty
+                tension = (pred - obs) / unc
+                tensions.append(tension)
                 
-                # Satisfaction: 1 = perfect, 0 = > 3 sigma away
-                deviation = abs(pred - obs) / unc
-                satisfaction = max(0, 1 - deviation / 3)
-                
-                constraint_names.append(name.replace('_', '\n'))
-                satisfactions.append(satisfaction)
-                
-        colors_bar = ['#2ecc71' if s > 0.67 else '#f1c40f' if s > 0.33 else '#e74c3c' 
-                     for s in satisfactions]
+        y_pos = np.arange(len(obs_names))
+        colors = ['#2ecc71' if abs(t) < 1 else '#f1c40f' if abs(t) < 3 else '#e74c3c' for t in tensions]
         
-        bars = ax4.bar(range(len(constraint_names)), satisfactions, color=colors_bar)
-        ax4.axhline(y=0.67, color='white', linestyle='--', alpha=0.3)
-        ax4.set_xticks(range(len(constraint_names)))
-        ax4.set_xticklabels(constraint_names, rotation=45, ha='right', fontsize=8, color='white')
-        ax4.set_ylabel('Constraint Satisfaction', color='white')
-        ax4.set_title('How Well Predictions Match Observations', color='white')
-        ax4.set_ylim(0, 1.1)
-        ax4.tick_params(colors='white')
-        for spine in ax4.spines.values():
-            spine.set_color('white')
+        ax4.barh(y_pos, tensions, color=colors, edgecolor='black')
+        ax4.axvline(0, color='black', linewidth=1)
+        ax4.axvspan(-1, 1, color='green', alpha=0.1, label='1σ')
+        ax4.axvspan(-3, 3, color='yellow', alpha=0.1, label='3σ')
+        
+        ax4.set_yticks(y_pos)
+        ax4.set_yticklabels(obs_names)
+        ax4.set_xlabel('Tension (σ)')
+        ax4.set_title('Final Constraint Tensions', fontweight='bold')
+        ax4.legend()
+        ax4.grid(axis='x', linestyle='--', alpha=0.5)
             
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=150, facecolor='black')
+            plt.savefig(save_path, dpi=150)
             print(f"Saved optimization visualization to {save_path}")
+            plt.close(fig)
             
         return fig
 
 
 def main():
     """Run the optimization."""
-    output_dir = '/Users/robsimens/Documents/Cosmology/dark-scaffold-theory'
+    parser = argparse.ArgumentParser(description='Dark Scaffold Theory Parameter Optimizer')
+    parser.add_argument('--hires', action='store_true',
+                        help='Run at high resolution (200³ grid, 100k particles, 400 steps, 150 evals)')
+    args = parser.parse_args()
+
+    if args.hires:
+        print("*** HIGH-RESOLUTION MODE ***")
+
+    # ── Force all I/O to Corsair drive (disk8) ──────────────
+    output_dir = enforce_corsair_root()
     
     optimizer = TheoryOptimizer(n_quick_steps=50, verbose=True)
-    result = optimizer.optimize(max_evaluations=80)
+    max_evals = 150 if args.hires else 80
+    result = optimizer.optimize(max_evaluations=max_evals)
     
     # Save visualization
     optimizer.visualize_optimization(
         result,
-        save_path=f'{output_dir}/optimization_results.png'
+        save_path=os.path.join(output_dir, 'optimization_results.png')
     )
     
     # Run full likelihood assessment with optimized parameters
@@ -445,8 +456,9 @@ def main():
     print("Running final assessment with optimized parameters...")
     print()
     
+    grid_size = 200 if args.hires else 100
     scaffold_params = ScaffoldParameters(
-        grid_size=100,
+        grid_size=grid_size,
         box_size=500.0,
         spectral_index=result.best_params['spectral_index'],
         smoothing_scale=result.best_params['smoothing_scale'],
@@ -457,9 +469,11 @@ def main():
     scaffold = DarkMatterScaffold(scaffold_params)
     scaffold.generate()
     
+    n_particles = 100000 if args.hires else 40000
+    n_timesteps = 400 if args.hires else 200
     seep_params = SeepingParameters(
-        n_particles=40000,
-        n_timesteps=200,
+        n_particles=n_particles,
+        n_timesteps=n_timesteps,
         dm_attraction_strength=result.best_params['dm_attraction_strength'],
         filament_preference=result.best_params['filament_preference'],
         random_seed=123
@@ -470,22 +484,26 @@ def main():
     
     calc = TheoryLikelihoodCalculator(scaffold, sim.baryonic_density)
     report = calc.generate_report(
-        save_path=f'{output_dir}/optimized_likelihood_report.txt'
+        save_path=os.path.join(output_dir, 'optimized_likelihood_report.txt')
     )
     print(report)
     
     calc.visualize_results(
-        save_path=f'{output_dir}/optimized_likelihood_assessment.png'
+        save_path=os.path.join(output_dir, 'optimized_likelihood_assessment.png')
     )
+    plt.close('all')
+    gc.collect()
     
     # Save optimized parameters
-    with open(f'{output_dir}/optimized_parameters.txt', 'w') as f:
+    with open(os.path.join(output_dir, 'optimized_parameters.txt'), 'w') as f:
         f.write("OPTIMIZED DARK SCAFFOLD PARAMETERS\n")
         f.write("=" * 40 + "\n\n")
         for name, value in result.best_params.items():
             f.write(f"{name}: {value}\n")
-        f.write(f"\nFinal Score: {result.best_score}/100\n")
-        f.write(f"Improvement: +{result.improvement} points\n")
+        f.write(f"\nFinal Reduced Chi-Squared: {result.best_reduced_chi_squared:.2f}\n")
+        f.write(f"Final Total Chi-Squared: {result.best_chi_squared:.2f}\n")
+        f.write(f"Delta BIC: {result.best_delta_bic:.2f}\n")
+        f.write(f"Chi-Squared Improvement: {result.chi_squared_improvement:.2f}\n")
         
     print(f"\nOptimized parameters saved to {output_dir}/optimized_parameters.txt")
     

@@ -17,9 +17,15 @@ Author: Rob Simens
 Theory: Pre-Existing Dark Scaffold Cosmology
 """
 
+import os
+import gc
+import argparse
 import numpy as np
 from dataclasses import dataclass
 from typing import Optional, Tuple
+from corsair_io import enforce_corsair_root, safe_savefig
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.ndimage import gaussian_filter, sobel
@@ -330,7 +336,8 @@ class FastNBodySimulation:
         if save_path:
             plt.savefig(save_path, dpi=150, facecolor='black', bbox_inches='tight')
             print(f"Saved to {save_path}")
-            
+            plt.close(fig)
+        
         return fig
     
     def create_evolution_animation(self, save_path: str):
@@ -374,17 +381,26 @@ class FastNBodySimulation:
 
 def main():
     """Run fast N-body simulation."""
+    parser = argparse.ArgumentParser(description='Fast N-Body Dark Scaffold Simulation')
+    parser.add_argument('--hires', action='store_true',
+                        help='Run at high resolution (128³ grid, 15k particles, 600 steps)')
+    args = parser.parse_args()
+
     print("=" * 60)
     print("FAST N-BODY DARK SCAFFOLD SIMULATION")
+    if args.hires:
+        print("*** HIGH-RESOLUTION MODE ***")
     print("=" * 60)
     print()
     
-    output_dir = '/Users/robsimens/Documents/Cosmology/dark-scaffold-theory'
+    # ── Force all I/O to Corsair drive (disk8) ──────────────
+    output_dir = enforce_corsair_root()
     
     # Generate scaffold
     print("Generating dark matter scaffold...")
+    grid_size = 128 if args.hires else 64
     scaffold_params = ScaffoldParameters(
-        grid_size=64,
+        grid_size=grid_size,
         box_size=100.0,
         spectral_index=-1.5,
         smoothing_scale=2.0,
@@ -395,11 +411,14 @@ def main():
     scaffold = DarkMatterScaffold(scaffold_params)
     scaffold.generate()
     print(f"  Generated {scaffold_params.grid_size}³ grid")
+    gc.collect() # Clean up memory after scaffold generation
     
     # Run N-body simulation
+    n_particles = 15000 if args.hires else 5000
+    n_steps = 600 if args.hires else 300
     params = FastNBodyParams(
-        n_particles=5000,
-        n_steps=300,
+        n_particles=n_particles,
+        n_steps=n_steps,
         dt=0.005,
         dm_coupling=2.5,
         self_gravity=0.2,
@@ -409,7 +428,8 @@ def main():
     )
     
     sim = FastNBodySimulation(scaffold, params)
-    stats = sim.run(save_history=True)
+    save_history = not args.hires  # Skip history for hires to save memory
+    stats = sim.run(save_history=save_history)
     
     print()
     print("=" * 60)
@@ -421,11 +441,18 @@ def main():
     print()
     
     # Save visualization
-    sim.visualize_final(save_path=f'{output_dir}/nbody_result.png')
+    sim.visualize_final(save_path=os.path.join(output_dir, 'nbody_result.png'))
+    plt.close('all')
+    gc.collect()
     
-    # Create animation
-    print("\nCreating evolution animation...")
-    sim.create_evolution_animation(save_path=f'{output_dir}/nbody_evolution.gif')
+    # Create animation (skip for hires — too memory-intensive)
+    if not args.hires:
+        print("\nCreating evolution animation...")
+        sim.create_evolution_animation(save_path=os.path.join(output_dir, 'nbody_evolution.gif'))
+        plt.close('all')
+        gc.collect()
+    else:
+        print("  Skipping animation in hires mode (memory-intensive)")
     
     print()
     print("=" * 60)

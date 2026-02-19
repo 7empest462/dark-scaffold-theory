@@ -126,7 +126,7 @@ def run_lensing_test():
     ax.quiver(X, Y, U, V, color='cyan', headlength=0, headaxislength=0, pivot='mid', alpha=0.5)
     
     plt.tight_layout()
-    plt.savefig('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/lensing_test_result.png', 
+    plt.savefig('/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/lensing_test_result.png', 
                dpi=150, facecolor='black')
     print("   Saved to lensing_test_result.png")
     

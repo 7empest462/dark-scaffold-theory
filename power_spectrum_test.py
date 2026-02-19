@@ -170,7 +170,7 @@ def run_power_spectrum_test():
     for spine in ax.spines.values():
         spine.set_color('white')
         
-    plt.savefig('/Users/robsimens/Documents/Cosmology/dark-scaffold-theory/power_spectrum_result.png', 
+    plt.savefig('/Volumes/Corsair_Lab/Home/Documents/Cosmology/dark-scaffold-theory/power_spectrum_result.png', 
                dpi=150, facecolor='black')
     print("   Saved to power_spectrum_result.png")
     
