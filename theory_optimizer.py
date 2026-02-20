@@ -88,6 +88,8 @@ class TheoryOptimizer:
         filament_threshold = params_array[2]
         dm_attraction = params_array[3]
         filament_pref = params_array[4]
+        z_decoupling = params_array[5]
+        coupling_growth = params_array[6]
         
         # Generate scaffold
         scaffold_params = ScaffoldParameters(
@@ -109,6 +111,8 @@ class TheoryOptimizer:
                 n_timesteps=self.n_quick_steps,
                 dm_attraction_strength=dm_attraction,
                 filament_preference=filament_pref,
+                z_decoupling=z_decoupling,
+                coupling_growth_rate=coupling_growth,
                 random_seed=123
             )
             
@@ -164,19 +168,21 @@ class TheoryOptimizer:
         self.history = []
         
         # Parameter bounds
-        # [spectral_index, smoothing_scale, filament_threshold, dm_attraction, filament_pref]
+        # [spectral_index, smoothing_scale, filament_threshold, dm_attraction, filament_pref, z_decoupling, coupling_growth]
         bounds = [
             (-2.5, -0.5),   # spectral_index
             (1.0, 5.0),     # smoothing_scale
             (1.0, 3.0),     # filament_threshold (key to fixing filling factor!)
             (1.0, 6.0),     # dm_attraction_strength
             (0.5, 3.0),     # filament_preference
+            (5.0, 30.0),    # z_decoupling (when radiation pressure drops)
+            (0.5, 5.0),     # coupling_growth_rate (how fast it turns on)
         ]
         
         if self.verbose:
             print(f"Parameter bounds:")
             param_names = ['spectral_index', 'smoothing_scale', 'filament_threshold',
-                          'dm_attraction', 'filament_preference']
+                          'dm_attraction', 'filament_preference', 'z_decoupling', 'coupling_growth_rate']
             for name, (lo, hi) in zip(param_names, bounds):
                 print(f"  {name}: [{lo}, {hi}]")
             print()
@@ -216,6 +222,8 @@ class TheoryOptimizer:
                 'filament_threshold': best_params[2],
                 'dm_attraction_strength': best_params[3],
                 'filament_preference': best_params[4],
+                'z_decoupling': best_params[5],
+                'coupling_growth_rate': best_params[6],
             },
             best_chi_squared=final_result['total_chi_squared'],
             best_reduced_chi_squared=final_result['reduced_chi_squared'],
@@ -250,6 +258,8 @@ class TheoryOptimizer:
             n_timesteps=150,
             dm_attraction_strength=params_array[3],
             filament_preference=params_array[4],
+            z_decoupling=params_array[5],
+            coupling_growth_rate=params_array[6],
             random_seed=123
         )
         
@@ -347,6 +357,8 @@ class TheoryOptimizer:
             'filament_threshold': (1.0, 3.0),
             'dm_attraction_strength': (1.0, 6.0),
             'filament_preference': (0.5, 3.0),
+            'z_decoupling': (5.0, 30.0),
+            'coupling_growth_rate': (0.5, 5.0),
         }
         
         normalized = []

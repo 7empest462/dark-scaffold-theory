@@ -2,71 +2,65 @@
 DARK SCAFFOLD THEORY - LIKELIHOOD ASSESSMENT REPORT
 ======================================================================
 
-OVERALL THEORY SCORE: 25.0/100
-
-Interpretation: CHALLENGED - Significant tension, major revisions needed
+Interpretation: Decisive evidence against Dark Scaffold
 
 ----------------------------------------------------------------------
 STATISTICAL ANALYSIS
 ----------------------------------------------------------------------
 
-Total χ²: 27790.29
-Degrees of freedom: 7
+Total χ²: 101025.26
+Degrees of freedom: 9
 P-value: 0.0000
-Evidence ratio vs ΛCDM: 0.0000
+Δ BIC vs ΛCDM: 101014.06
+Evidence ratio vs ΛCDM: 0.0000e+00
 
 ----------------------------------------------------------------------
 PREDICTIONS vs OBSERVATIONS
 ----------------------------------------------------------------------
 
 ~ Cosmic Web Filling Factor:
-    Predicted: 0.0134 | Observed: 0.0600 ± 0.0200
-    Likelihood: 0.0663
+    Predicted: 0.0082 | Observed: 0.0600 ± 0.0200
+    Likelihood: 0.0350
 
 ✓ DM Halo Concentration:
     Predicted: 8.0000 | Observed: 10.0000 ± 3.0000
     Likelihood: 0.8007
 
-✓ Baryon Fraction in Clusters:
-    Predicted: 0.1576 | Observed: 0.1560 ± 0.0100
-    Likelihood: 0.9867
+~ Baryon Fraction in Clusters:
+    Predicted: 0.1809 | Observed: 0.1560 ± 0.0100
+    Likelihood: 0.0446
 
 ✗ Power Spectrum Amplitude σ₈:
-    Predicted: 0.9225 | Observed: 0.8110 ± 0.0060
-    Likelihood: 0.0000
+    Predicted: 0.7860 | Observed: 0.8110 ± 0.0060
+    Likelihood: 0.0002
 
 ✗ Galaxy Correlation Length:
-    Predicted: 87.8221 | Observed: 5.0000 ± 0.5000
+    Predicted: 163.8889 | Observed: 5.0000 ± 0.5000
     Likelihood: 0.0000
 
 ✓ Bullet Cluster DM-Baryon Offset:
-    Predicted: 149.8763 | Observed: 150.0000 ± 50.0000
-    Likelihood: 1.0000
+    Predicted: 144.0294 | Observed: 150.0000 ± 50.0000
+    Likelihood: 0.9929
 
 ✓ BAO Scale:
     Predicted: 145.0000 | Observed: 147.0000 ± 2.0000
     Likelihood: 0.6065
 
-----------------------------------------------------------------------
-SCORE BREAKDOWN
-----------------------------------------------------------------------
+~ Weak Lensing S8 (Smoothness Proxy):
+    Predicted: 0.0000 | Observed: 0.0050 ± 0.0020
+    Likelihood: 0.0439
 
-Statistical fit score: 0.0/50
-Evidence score: 0.0/25
+✓ Epoch of Reionization Midpoint:
+    Predicted: 6.0000 | Observed: 7.6800 ± 0.7900
+    Likelihood: 0.1042
 
-Physical plausibility adjustments:
-  energy_efficiency: +15
-  bullet_cluster: +10
-  early_galaxies: +10
-  origin_question: -10
 
 ======================================================================
 CONCLUSION
 ======================================================================
 
-The Dark Scaffold theory faces significant challenges.
+The Dark Scaffold theory faces significant structural tensions.
 
-While conceptually interesting, the current formulation
-has difficulty matching key observational constraints.
-Major theoretical revisions may be needed.
+The current formulation has difficulty matching key constraints
+compared to the baseline ΛCDM model.
 ======================================================================

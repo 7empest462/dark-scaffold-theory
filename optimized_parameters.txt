@@ -1,11 +1,15 @@
 OPTIMIZED DARK SCAFFOLD PARAMETERS
 ========================================
 
-spectral_index: -0.5441986624914583
-smoothing_scale: 3.4828123878277286
-filament_threshold: 2.2095514475846274
-dm_attraction_strength: 3.7800251932129227
-filament_preference: 2.5580404025708754
+spectral_index: -0.8574496454276612
+smoothing_scale: 1.0221758757937605
+filament_threshold: 2.3975095777650837
+dm_attraction_strength: 4.460898667718711
+filament_preference: 1.7655981664928948
+z_decoupling: 10.06726360550783
+coupling_growth_rate: 0.5037339464965269
 
-Final Score: 25.0/100
-Improvement: +0.0 points
+Final Reduced Chi-Squared: 11227.35
+Final Total Chi-Squared: 101046.18
+Delta BIC: 101034.98
+Chi-Squared Improvement: -98546.18

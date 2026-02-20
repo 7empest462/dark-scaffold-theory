@@ -45,9 +45,15 @@ class SeepingParameters:
     expansion_rate: float = 0.1   # Expansion speed (c = 1 units)
     
     # Seeping physics
-    dm_attraction_strength: float = 2.0   # How strongly DM attracts baryonic matter
+    dm_attraction_strength: float = 2.0   # Base attraction strength
     filament_preference: float = 1.5      # Preference for flowing along filaments
     diffusion_rate: float = 0.05          # Random diffusion component
+    
+    # Radiation Pressure Delay parameters (Phase 3)
+    z_initial: float = 1000.0             # Starting redshift (CMB emission)
+    z_final: float = 0.0                  # Ending redshift
+    z_decoupling: float = 20.0            # Redshift where radiation pressure drops enough for infall
+    coupling_growth_rate: float = 2.0     # How sharply the coupling turns on
     
     # Simulation parameters
     n_particles: int = 50000    # Number of tracer particles
@@ -56,7 +62,6 @@ class SeepingParameters:
     
     # Seed for reproducibility
     random_seed: Optional[int] = None
-
 
 class SeepingSimulation:
     """
@@ -81,7 +86,11 @@ class SeepingSimulation:
         """
         self.scaffold = scaffold
         self.params = params or SeepingParameters()
-        self._rng = np.random.default_rng(self.params.random_seed)
+        self.current_step = 0
+        self.current_z = self.params.z_initial
+        
+        seed = self.params.random_seed or np.random.randint(100000)
+        self._rng = np.random.RandomState(seed)
         
         # Particle state
         self.positions = None       # [n_particles, 3] positions
@@ -171,15 +180,29 @@ class SeepingSimulation:
         grad_mag = np.maximum(grad_mag, 1e-8)  # Avoid division by zero
         grad_unit = gradients / grad_mag
         
+        # Calculate current redshift based on simulation progress
+        progress = self.current_step / max(1, self.params.n_timesteps - 1)
+        # Simple linear mapping of time to redshift (z_initial -> z_final)
+        current_z = self.params.z_initial - progress * (self.params.z_initial - self.params.z_final)
+        self.current_z = current_z
+        
         # Force 1: Gravitational attraction toward DM overdensities
-        # Stronger for higher DM density regions
-        attraction_strength = self.params.dm_attraction_strength
-        dm_force = attraction_strength * gradients
+        # RADIATION PRESSURE DELAY (Time-dependent Coupling)
+        # At high z (early time), radiation pressure prevents infall -> g(z) is low.
+        # At low z (late time), radiation pressure clears -> g(z) approaches base strength.
+        # Use a smooth transition (sigmoid) centered at z_decoupling
+        
+        base_strength = self.params.dm_attraction_strength
+        # + sign because falling z means time moves forward. We want coupling to be 1 when z < z_decoupling.
+        coupling_factor = 1.0 / (1.0 + np.exp(self.params.coupling_growth_rate * (current_z - self.params.z_decoupling)))
+        
+        effective_attraction = base_strength * coupling_factor
+        dm_force = effective_attraction * gradients
         
         # Force 2: Preferential flow along filaments
         # Particles tend to follow the filament direction
         # (perpendicular to gradient, along the filament ridge)
-        filament_pref = self.params.filament_preference
+        filament_pref = self.params.filament_preference * coupling_factor # Also delayed by radiation
         
         # Current velocity component along gradient
         vel_along_grad = np.sum(self.velocities * grad_unit, axis=1, keepdims=True)
@@ -246,6 +269,7 @@ class SeepingSimulation:
             self.density_history = [self.baryonic_density.copy()]
         
         for t in range(self.params.n_timesteps):
+            self.current_step = t
             self.step()
             
             if save_history and t % 5 == 0:  # Save every 5th frame

@@ -119,7 +119,20 @@ While the theory provides excellent solutions to *structural* anomalies (galaxie
 
 ---
 
-## 4. Origin of the Scaffold: Cyclic Cosmology Framework
+## 4. Modified Dynamics
+
+### 4.1 Radiation Pressure Delay (The Reionization Crisis)
+
+**Problem:** Standard $\Lambda$CDM hierarchical assembly ensures structure forms late enough to match the observed epoch of reionization ($z \approx 7.7$). A naive implementation of the pre-existing Dark Scaffold predicts catastrophic early structure formation and reionization at $z \approx 58$.
+**PEDS Mechanism:** In the early universe ($z > 1000$), the universe is dominated by radiation. The intense radiation pressure (Compton drag) prevents baryons from falling into the deep dark matter potential wells. We model this via a redshift-dependent coupling function $g_{\phi m}(z)$ that governs the "seepage" rate:
+
+$$ g_{\phi m}(z) = \frac{g_0}{1 + e^{k(z - z_{dec})}} $$
+
+**Result:** Parameter optimization of the likelihood engine yields a "decoupling redshift" of **$z_{dec} \approx 10.0$**. This radiation pressure delay successfully holds back star formation, shifting the predicted reionization midpoint from $z=58$ down to **$z=6.00$** (reducing the tension with Planck 2018 from catastrophic to -2.1$\sigma$).
+
+---
+
+## 5. Origin of the Scaffold: Cyclic Cosmology Framework
 
 We explore the hypothesis that the scaffold originates from **Conformal Cyclic Cosmology (CCC)**.
 
